@@ -85,7 +85,7 @@ def stop() -> str:
         cursor.execute(QUERY_DELAYS)
         count_delays  = cursor.fetchall()
 
-    count_delays = [['time', 'delay']]+list(filter(lambda q:q[1]!=None and q[1] < 500 and q[1] > -500, map(lambda r:[r["TIME_TO_SEC(dep_time)"], r["TIME_TO_SEC(dep_time) - TIME_TO_SEC(dep_est)"]], count_delays)))
+    count_delays = [['time', 'delay']]+list(filter(lambda q:q[1]!=None and q[1] < 500 and q[1] > 0, map(lambda r:[r["TIME_TO_SEC(dep_time)"], r["TIME_TO_SEC(dep_time) - TIME_TO_SEC(dep_est)"]], count_delays)))
 
     # render the result.
     return flask.render_template("stop/stop.json", id=sid,
