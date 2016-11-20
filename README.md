@@ -1,4 +1,4 @@
-# SBBTDelayUI
+# TrainIsLate
 
 (In-browser) visualiser for train delay data from SBB. Lauzhack 2016 project by @tkw1536, @kuboschek and @Majorka1. 
 
