@@ -1,14 +1,86 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+  <title>trainislate</title>
+
+  <style>
+  #stations {
+    position: absolute;
+    float: left;
+    width: 25%;
+  }
+
+  #head {
+    margin-top: 1em;
+  }
+
+  #map {
+      width:100%;
+      height:100%;
+      position: absolute;
+      top: 0px;
+      left: 0px;
+  }
+
+  #mapholder {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  </style>
+
   <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
 
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="jumbotron" id="head">
+          <h1 id="demo">Locating You</h1>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <div id="wrap">
+          <div id="map">
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJooXi2ZZ0ADDY61D6bbxWAxpYqVoIsDc&callback=initMap"
+  async defer></script>
   <script type="text/javascript">
       var demoElem = "#demo";
-      var stationList = "#stations";
+      var stationList = "#head";
 
       var distAPIUrl = function(lat, lon, dist) {  return "https://data.sbb.ch/api/records/1.0/search/?dataset=haltestelle-offnungszeiten&facet=stationsbezeichnung&facet=service&geofilter.distance=" + lat + "%2C" + lon + "%2C" + dist;
+      }
+
+      var initMap = function(lat, lon) {
+        // Create a map object and specify the DOM element for display.
+        var map = new google.maps.Map(document.getElementById('map'), {
+          scrollwheel: false,
+          zoom: 8
+        });
+
+        var latLng = new google.maps.LatLng(lat, lon);
+        map.setCenter(latLng);
       }
 
       function getLocation() {
@@ -20,8 +92,6 @@
       }
       function showPosition(position) {
           console.log("showPosition");
-          $(demoElem).html("Latitude: " + position.coords.latitude +
-          "<br>Longitude: " + position.coords.longitude);
 
           var lat = position.coords.latitude;
           var lon = position.coords.longitude;
@@ -51,7 +121,7 @@
 
             console.log("Stations: ", stations);
 
-            var sList = $("<ul>");
+            var sList = $(stationList).empty();
 
             for (station of stations) {
               console.log(station.id);
@@ -62,13 +132,13 @@
                 var late = d["late"];
                 var ontime = all - late;
 
-                 var elem = $("<li data-id='" + station.id + "'>" + station.name + " ("+late+" late, "+ontime+" ontime, average delay = "+d["delay"]+")</li>");
-                  sList.append(elem);
+                 var elem = $("<h1 data-id='" + station.id + "'>" + station.name + " <small>average delay = "+d["delay"]+" seconds</small></h1>");
+                 sList.append(elem);
 
               });
-            }
 
-            $(stationList).empty().append(sList);
+
+            }
           });
 
           document.getElementById("mapholder").innerHTML = "<img src='"+img_url+"'>";
@@ -94,16 +164,5 @@
         getLocation();
       }());
   </script>
-</head>
-<body>
-  <div id="demo">
-    This is body
-  </div>
-  <div id="mapholder">
-
-  </div>
-  <div id="stations">
-
-  </div>
 </body>
 </html>
