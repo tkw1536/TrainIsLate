@@ -3,5 +3,6 @@
   "id": "{{ id }}",
   "all": {{ all }},
   "late": {{ late }},
-  "delay": {{ delay }}
+  "delay": {{ delay }},
+  "delays": {{ delays }}
 }

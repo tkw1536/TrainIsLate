@@ -1,5 +1,6 @@
 import flask
 import sys
+import json
 
 import pymysql
 import pymysql.cursors
@@ -71,6 +72,8 @@ def stop() -> str:
     QUERY_ALL = 'SELECT COUNT(*) FROM SbbData WHERE stop_id={}'.format(sid)
     QUERY_LATE = 'SELECT COUNT(*), AVG(TIME_TO_SEC(dep_time) - TIME_TO_SEC(dep_est)) FROM SbbData WHERE stop_id={} AND ((arr_time != arr_est) OR (dep_time != dep_est) OR trip_canc OR train_skip)'.format(
         sid)
+    QUERY_DELAYS = 'SELECT TIME_TO_SEC(dep_time), TIME_TO_SEC(dep_time) - TIME_TO_SEC(dep_est) FROM SbbData WHERE stop_id={} AND ((arr_time != arr_est) OR (dep_time != dep_est) OR trip_canc OR train_skip)'.format(
+        sid)
 
     with db.cursor() as cursor:
         cursor.execute(QUERY_ALL)
@@ -78,11 +81,16 @@ def stop() -> str:
     with db.cursor() as cursor:
         cursor.execute(QUERY_LATE)
         count_late = cursor.fetchone()
+    with db.cursor() as cursor:
+        cursor.execute(QUERY_DELAYS)
+        count_delays  = cursor.fetchall()
+
+    count_delays = [['time', 'delay']]+list(filter(lambda q:q[1]!=None and q[1] < 500 and q[1] > -500, map(lambda r:[r["TIME_TO_SEC(dep_time)"], r["TIME_TO_SEC(dep_time) - TIME_TO_SEC(dep_est)"]], count_delays)))
 
     # render the result.
     return flask.render_template("stop/stop.json", id=sid,
                                  all=count_all['COUNT(*)'],
-                                 late=count_late['COUNT(*)'], delay=count_late['AVG(TIME_TO_SEC(dep_time) - TIME_TO_SEC(dep_est))'])
+                                 late=count_late['COUNT(*)'], delay=count_late['AVG(TIME_TO_SEC(dep_time) - TIME_TO_SEC(dep_est))'], delays=json.dumps(count_delays))
 
 
 def stop_error(message: str):
