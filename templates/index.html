@@ -2,10 +2,7 @@
 <html>
 <head>
   <link rel="stylesheet" href="style.css">
-  <script
-  src="https://code.jquery.com/jquery-3.1.1.min.js"
-  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
-  crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
 
   <script type="text/javascript">
       var demoElem = "#demo";
@@ -57,11 +54,19 @@
             var sList = $("<ul>");
 
             for (station of stations) {
-              var elem = $("<li data-id='" + station.id + "'>" + station.name + "</li>");
-              sList.append(elem);
-            }
+              console.log(station.id);
+              $.get('/stop.json?id='+station.id, {}, function(data){
+                var d = JSON.parse(data);
+                console.log("received stop info", d);
+                var all = d["all"];
+                var late = d["late"];
+                var ontime = all - late;
 
-            console.log(sList);
+                 var elem = $("<li data-id='" + station.id + "'>" + station.name + " ("+late+" late, "+ontime+" ontime, average delay = "+d["delay"]+")</li>");
+                  sList.append(elem);
+
+              });
+            }
 
             $(stationList).empty().append(sList);
           });

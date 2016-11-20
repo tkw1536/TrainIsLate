@@ -1,5 +1,4 @@
 from datetime import datetime
-import getpass
 import tqdm
 import glob
 import sys
@@ -7,6 +6,8 @@ import sys
 import typing
 import pymysql
 import pymysql.cursors
+
+import utils
 
 
 def s2dt(s: str) -> typing.Optional[datetime]:
@@ -30,7 +31,11 @@ def date2date(s: str) -> typing.Optional[datetime]:
     return datetime.strptime(s, '%d.%m.%Y')
 
 
-def parse_line(line):
+def parse_line(line: str) -> dict:
+    """ Parses a single line of the SBB CSV file.
+
+    :param line: Line of the CSV file to parse.
+    """
     ll = line[:-1].split(";")
     d = {
         "day": date2date(ll[0]),
@@ -105,7 +110,8 @@ def fmt_sql(l: dict) -> str:
     )
 
 
-def read_and_store(infile: str, host: str, username: str, database: str, password: str):
+def read_and_store(infile: str, host: str, username: str, database: str,
+                   password: str):
     """ Reads a data file in the SBB data format and exports it into an SQL
     database.
 
@@ -164,40 +170,28 @@ def read_and_store(infile: str, host: str, username: str, database: str, passwor
 
     # finally commit everything and close the connection to the DB.
     cursor.execute("COMMIT;")
+
+    # and make a nice index -- this will take forever
+    cursor.execute("CREATE INDEX PIndex IF NOT EXISTS ON SbbData (stop_id);")
     db.close()
-
-def read_or_ask(idx: int, prompt: str, hidden: bool = False) -> str:
-    """ Reads an argument from the command line or asks for it via STDIN.
-
-    :param idx: Index of argument to read from command line.
-    :param prompt: Prompt to ask in case the argument is not available.
-    :param hidden: Indicates if a password prompt should be used.
-    """
-
-    if len(sys.argv) > idx:
-        return sys.argv[idx]
-    elif hidden:
-        return getpass.getpass(prompt)
-    else:
-        return input(prompt)
 
 
 def main():
     """ Main entry point for import script. """
 
     # check that we have enough arguments
-    if '--help' in sys.argv[1:] or len(sys.argv) == 1:
+    if '--help' in sys.argv[1:]:
         print("""Reads in SBB CSV files and imports them into an SQL database.
         Usage: {} [PATH [HOST [USER [DATABASE [PASSWORD]]]]]
         """.format(sys.argv[0]))
         sys.exit(1)
 
     # read all of the arguments
-    path = read_or_ask(1, "Path to the files to import>")
-    host = read_or_ask(2, "SQL Hostname>")
-    username = read_or_ask(3, "Username for {}".format(host))
-    database = read_or_ask(4, "Database Name")
-    password = read_or_ask(5, "Password for {} ({}@{}):", True)
+    path = utils.read_or_ask(1, "Path to the files to import>")
+    host = utils.read_or_ask(2, "SQL Hostname>")
+    username = utils.read_or_ask(3, "Username for {}>".format(host))
+    database = utils.read_or_ask(4, "Database Name>")
+    password = utils.read_or_ask(5, "Password for {} ({}@{})>".format(database, username, host), True)
 
     # read all files in the given directory
     for f in tqdm.tqdm(glob.glob(path + "/*.csv")):
@@ -206,4 +200,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
